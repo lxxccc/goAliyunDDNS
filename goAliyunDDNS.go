@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/denverdino/aliyungo/dns"
-	"golang.org/x/tools/go/ssa/interp/testdata/src/fmt"
 	"lxxccc.top/Library/ToolkitsGo/config/json"
-	"lxxccc.top/Library/ToolkitsGo/network"
 )
 
 // ConfigInfo 定义域名相关配置信息
@@ -20,8 +23,15 @@ func main() {
 	config := new(ConfigInfo)
 	json.ReadJSONConfigToStruct("config.json", &config)
 	// 获取公网IP信息
-	publicIP, err := network.GetPublicIPUseDnspod()
-	fmt.Println("当前公网IP：" + publicIP)
+	resp, err := http.Get("https://myexternalip.com/raw")
+	if err != nil {
+		log.Println("发生错误", err)
+		return
+	}
+	defer resp.Body.Close()
+	content, _ := ioutil.ReadAll(resp.Body)
+	publicIP := string(content)
+	log.Println("当前公网IP：" + publicIP)
 
 	// 连接阿里云服务器，获取DNS信息
 	client := dns.NewClient(config.AccessKeyID, config.AccessKeySecret)
@@ -30,7 +40,7 @@ func main() {
 	domainInfo.DomainName = config.DomainName
 	oldRecord, err := client.DescribeDomainRecords(domainInfo)
 	if err != nil {
-		fmt.Println("链接错误")
+		log.Println("链接错误", err)
 		return
 	}
 
