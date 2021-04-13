@@ -23,7 +23,7 @@ func main() {
 	config := new(ConfigInfo)
 	json.ReadJSONConfigToStruct("config.json", &config)
 	// 获取公网IP信息
-	resp, err := http.Get("https://myexternalip.com/raw")
+	resp, err := http.Get("https://ip.dhcp.cn/?ip")
 	if err != nil {
 		log.Println("发生错误", err)
 		return
